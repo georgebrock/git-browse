@@ -125,7 +125,12 @@ class GitBrowser(object):
 
     @bind_keys('p')
     def prev_commit(self):
-        #TODO Move to previous commit
+        prev = self.commits[self.commit].get('previous')
+        if not prev:
+            curses.beep()
+            return
+
+        self.commit, self.path = prev.strip().split(' ')
         self.read_history()
 
     def max_scroll_line(self):
