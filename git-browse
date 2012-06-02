@@ -33,11 +33,11 @@ class GitBrowser(object):
 
     @bind_keys('j', curses.KEY_DOWN)
     def down(self, lines=1):
-        self.stdscr.addstr(0, 0, "Down")
+        self.stdscr.addstr(0, 0, "Down %d" % lines)
 
     @bind_keys('f')
     def page_down(self):
-        self.stdscr.addstr(0, 0, "Page down")
+        self.down(self.height)
 
     @bind_keys('k', curses.KEY_UP)
     def up(self, lines=1):
@@ -45,7 +45,7 @@ class GitBrowser(object):
 
     @bind_keys('b')
     def page_up(self):
-        pass
+        self.up(self.height)
 
     @bind_keys('g')
     def home(self):
