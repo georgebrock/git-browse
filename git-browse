@@ -59,8 +59,7 @@ class GitBrowser(object):
                 self.commits[commit] = commit_description
 
     def draw(self):
-        self.commits_win.clear()
-        self.code_win.clear()
+        self.screen.clear()
 
         start = self.scroll_line
         stop = self.scroll_line + curses.LINES - 1
@@ -70,8 +69,7 @@ class GitBrowser(object):
             self.commits_win.addstr(i, 0, commit[:7])
             self.code_win.addstr(i, 0, line[0:curses.COLS-8])
 
-        self.commits_win.refresh()
-        self.code_win.refresh()
+        self.screen.refresh()
 
     def wait_for_key(self):
         return self.screen.getch()
