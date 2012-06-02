@@ -247,8 +247,8 @@ if __name__ == '__main__':
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=textwrap.dedent('''\
                You can use the following key commands to move around the
-               interactive blame output. If you use less or vim they should
-               be somewhat familiar:
+               interactive blame output. If you use less they should be
+               somewhat familiar:
 
                 j e RETURN DOWN         move down one line
                 k y UP                  move up one line
