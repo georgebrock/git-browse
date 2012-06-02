@@ -206,7 +206,8 @@ def main_loop(screen, path, rev):
         if c == ord('q'):
             return
         if c == ord('s'):
-            return ('git', ('git', 'show', browser.commit))
+            current_sha = browser.file_history.current_commit.sha
+            return ('git', ('git', 'show', current_sha))
         elif c in key_bindings:
             getattr(browser, key_bindings[c])()
         else:
