@@ -251,6 +251,9 @@ if __name__ == '__main__':
 
                 p            move to the previous commit
                 n            move to the next commit
+
+                q            quit
+                s            quit, and run `git show`
             '''),
         )
     parser.add_argument('rev', nargs='?', default='HEAD',
