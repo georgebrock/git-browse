@@ -76,21 +76,13 @@ class GitBrowser(object):
     def wait_for_key(self):
         return self.screen.getch()
 
-    @property
-    def width(self):
-        return self.screen.getmaxyx()[1]
-
-    @property
-    def height(self):
-        return self.screen.getmaxyx()[0]
-
     @bind_keys('j', curses.KEY_DOWN)
     def down(self, lines=1):
         self.scroll_line = min(self.scroll_line+lines, self.max_scroll_line())
 
     @bind_keys('f')
     def page_down(self):
-        self.down(self.height)
+        self.down(curses.LINES - 1)
 
     @bind_keys('k', curses.KEY_UP)
     def up(self, lines=1):
@@ -98,7 +90,7 @@ class GitBrowser(object):
 
     @bind_keys('b')
     def page_up(self):
-        self.up(self.height)
+        self.up(curses.LINES - 1)
 
     @bind_keys('g')
     def home(self):
