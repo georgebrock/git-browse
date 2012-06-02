@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import curses
+import os
 
 key_bindings = {}
 
@@ -14,10 +15,37 @@ def bind_keys(*keys):
 
 
 class GitBrowser(object):
-    def __init__(self, stdscr):
+    def __init__(self, stdscr, path, commit):
         self.stdscr = stdscr
+        self.path = path
+        self.commit = commit
+
+        self.read_history()
+
+        #TODO Create pads for commits and content
+
+    def read_history(self):
+        self.history = []
+        p = os.popen('git blame -p %s %s' % (self.path, self.commit), 'r')
+
+        while True:
+            header = p.readline()
+            if not header:
+                break
+
+            # Header format:
+            # commit_sha original_line final_line[ lines_in_group]
+            header_parts = header.split(' ')
+            commit = header_parts[0]
+
+            line = p.readline()
+            while not line.startswith('\t'):
+                line = p.readline()
+
+            self.history.append((commit, line[1:], ))
 
     def draw(self):
+        #self.stdscr.erase()
         self.stdscr.refresh()
 
     def wait_for_key(self):
@@ -55,9 +83,19 @@ class GitBrowser(object):
     def end(self):
         pass
 
+    @bind_keys('n')
+    def next_commit(self):
+        #TODO Move to next commit
+        self.read_history()
 
-def main_loop(stdscr):
-    browser = GitBrowser(stdscr)
+    @bind_keys('p')
+    def prev_commit(self):
+        #TODO Move to previous commit
+        self.read_history()
+
+
+def main_loop(stdscr, path, commit):
+    browser = GitBrowser(stdscr, path, commit)
 
     while True:
         browser.draw()
@@ -69,4 +107,7 @@ def main_loop(stdscr):
         if c in key_bindings:
             getattr(browser, key_bindings[c])()
 
-curses.wrapper(main_loop)
+#TODO Get path and commit from command line
+path = 'git-browse'
+commit = 'HEAD'
+curses.wrapper(main_loop, path, commit)
