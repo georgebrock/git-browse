@@ -20,8 +20,12 @@ class GitBrowser(object):
         self.path = path
         self.commit = commit
 
+        self.scroll_line = 0
+
+        self.commits_win = screen.subwin(curses.LINES, 8, 0, 0)
+        self.code_win = screen.subwin(curses.LINES, curses.COLS-9, 0, 9)
+
         self.read_history()
-        #TODO Create pads for commits and content
 
     def read_history(self):
         self.lines = []
@@ -55,18 +59,21 @@ class GitBrowser(object):
                 self.commits[commit] = commit_description
 
     def draw(self):
-        commits_pad = curses.newpad(len(self.lines)+1, 8)
-        lines_pad = curses.newpad(len(self.lines)+1, 200) #FIXME width
+        self.commits_win.clear()
+        self.code_win.clear()
 
-        for i, (commit, line) in enumerate(self.lines):
-            commits_pad.addstr(i, 0, commit[:7])
-            lines_pad.addstr(i, 0, line)
+        start = self.scroll_line
+        stop = self.scroll_line + curses.LINES - 1
+        visible_lines = self.lines[start:stop]
 
-        commits_pad.refresh(0,0, 0,0, self.height-1,8)
-        lines_pad.refresh(0,0, 0,9, self.height-1,self.width-8)
+        for i, (commit, line) in enumerate(visible_lines):
+            self.commits_win.addstr(i, 0, commit[:7])
+            self.code_win.addstr(i, 0, line[0:curses.COLS-8])
+
+        self.commits_win.refresh()
+        self.code_win.refresh()
 
     def wait_for_key(self):
-        return
         return self.screen.getch()
 
     @property
@@ -79,7 +86,7 @@ class GitBrowser(object):
 
     @bind_keys('j', curses.KEY_DOWN)
     def down(self, lines=1):
-        self.screen.addstr(0, 0, "Down %d" % lines)
+        self.scroll_line = min(self.scroll_line+lines, self.max_scroll_line())
 
     @bind_keys('f')
     def page_down(self):
@@ -87,7 +94,7 @@ class GitBrowser(object):
 
     @bind_keys('k', curses.KEY_UP)
     def up(self, lines=1):
-        pass
+        self.scroll_line = max(self.scroll_line - lines, 0)
 
     @bind_keys('b')
     def page_up(self):
@@ -95,11 +102,11 @@ class GitBrowser(object):
 
     @bind_keys('g')
     def home(self):
-        pass
+        self.scroll_line = 0
 
     @bind_keys('G')
     def end(self):
-        pass
+        self.scroll_line = self.max_scroll_line()
 
     @bind_keys('n')
     def next_commit(self):
@@ -110,6 +117,9 @@ class GitBrowser(object):
     def prev_commit(self):
         #TODO Move to previous commit
         self.read_history()
+
+    def max_scroll_line(self):
+        return len(self.lines) - curses.LINES + 1
 
 
 def main_loop(screen, path, commit):
