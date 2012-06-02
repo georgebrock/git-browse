@@ -226,5 +226,4 @@ if __name__ == '__main__':
 
     exit_command = curses.wrapper(main_loop, args.file, args.rev)
     if exit_command:
-        #print exit_command
         os.execvp(*exit_command)
