@@ -196,8 +196,8 @@ class GitBrowser(object):
         return len(lines) - curses.LINES + 1
 
 
-def main_loop(screen, path, commit):
-    browser = GitBrowser(screen, path, commit)
+def main_loop(screen, path, rev):
+    browser = GitBrowser(screen, path, rev)
 
     while True:
         browser.draw()
@@ -212,11 +212,18 @@ def main_loop(screen, path, commit):
         else:
             curses.beep()
 
-#TODO Get path and commit from command line
-path = 'git-browse'
-commit = 'HEAD'
 
-exit_command = curses.wrapper(main_loop, path, commit)
-if exit_command:
-    #print exit_command
-    os.execvp(*exit_command)
+if __name__ == '__main__':
+    import argparse
+
+    parser = argparse.ArgumentParser(description='Interactive git blame')
+    parser.add_argument('rev', nargs='?', default='HEAD',
+                        help='a Git revision to start from')
+    parser.add_argument('file',
+                        help='the path to the file you want to examine')
+    args = parser.parse_args()
+
+    exit_command = curses.wrapper(main_loop, args.file, args.rev)
+    if exit_command:
+        #print exit_command
+        os.execvp(*exit_command)
