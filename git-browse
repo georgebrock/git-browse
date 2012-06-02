@@ -79,6 +79,9 @@ class GitBrowser(object):
             self.commits_win.addstr(i, 0, commit[:7])
             self.code_win.addstr(i, 0, line[0:curses.COLS-9])
 
+            if commit == self.commit:
+                self.commits_win.addstr(i, 7, '+')
+
         self.status_win.clear()
         self.status_win.addstr(0, 0, '%s @ %s' % (self.path, self.commit[:7]))
 
