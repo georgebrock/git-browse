@@ -21,11 +21,7 @@ class GitBrowser(object):
         self.commits = {}
 
         #TODO Validate path
-
-        p = os.popen('git log %s -1 --pretty="%%H" -- %s' % (commit, path))
-        latest_commit = p.read().strip()
-        self.commit = latest_commit
-        #TODO Handle a bad commit
+        #TODO Validate commit
 
         self.screen = screen
         self.path = path
@@ -36,7 +32,19 @@ class GitBrowser(object):
         self.code_win = screen.subwin(curses.LINES, curses.COLS-9, 0, 9)
         self.status_win = screen.subwin(curses.LINES-1, 0)
 
+        self.commit = commit
         self.read_history()
+
+        commit_offset = 0
+        while self.commit not in self.commits:
+            p = os.popen('git log %s~%d -1 --pretty="%%H" -- %s' % (
+                self.commit,
+                commit_offset,
+                path
+            ))
+            latest_commit = p.read().strip()
+            self.commit = latest_commit
+            commit_offset += 1
 
     def read_history(self):
         self.lines = []
