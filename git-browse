@@ -1,0 +1,63 @@
+#!/usr/bin/env python
+
+import curses
+
+key_bindings = {}
+
+def bind_keys(*keys):
+    def decorator(func):
+        for k in keys:
+            key_bindings[ord(k)] = func.__name__
+        return func
+    return decorator
+
+
+class GitBrowser(object):
+    def __init__(self, stdscr):
+        self.stdscr = stdscr
+
+    def draw(self):
+        self.stdscr.refresh()
+
+    def wait_for_key(self):
+        return self.stdscr.getch()
+
+    @bind_keys('j')
+    def down(self, lines=1):
+        self.stdscr.addstr(0, 0, "Down")
+
+    @bind_keys('f')
+    def page_down(self):
+        self.stdscr.addstr(0, 0, "Page down")
+
+    @bind_keys('k')
+    def up(self, lines=1):
+        pass
+
+    @bind_keys('b')
+    def page_up(self):
+        pass
+
+    @bind_keys('g')
+    def home(self):
+        pass
+
+    @bind_keys('G')
+    def end(self):
+        pass
+
+
+def main_loop(stdscr):
+    browser = GitBrowser(stdscr)
+
+    while True:
+        browser.draw()
+        c = browser.wait_for_key()
+
+        if c == ord('q'):
+            return
+
+        if c in key_bindings:
+            getattr(browser, key_bindings[c])()
+
+curses.wrapper(main_loop)
