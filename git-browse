@@ -36,27 +36,33 @@ class GitFileHistory(object):
         output = p.read().split('\n\n')
 
         self.commits = [GitCommit(*c.split('\n', 2)) for c in output if c]
-        self.index = 0
+        self._index = 0
+        self._blame = None
 
     @property
     def current_commit(self):
-        return self.commits[self.index]
+        return self.commits[self._index]
 
     def next(self):
-        if self.index <= 0:
+        if self._index <= 0:
             return False
 
-        self.index -= 1
+        self._index -= 1
+        self._blame = None
         return True
 
     def prev(self):
-        if self.index >= len(self.commits) - 1:
+        if self._index >= len(self.commits) - 1:
             return False
 
-        self.index += 1
+        self._index += 1
+        self._blame = None
         return True
 
     def blame(self):
+        if self._blame:
+            return self._blame
+
         lines = []
 
         p = os.popen('git blame -p %s %s' % (
@@ -81,7 +87,8 @@ class GitFileHistory(object):
 
             lines.append((sha, line[1:], sha == self.current_commit.sha))
 
-        return lines
+        self._blame = lines
+        return self._blame
 
 
 class GitBrowser(object):
