@@ -94,7 +94,6 @@ class GitFileHistory(object):
 class GitBrowser(object):
     def __init__(self, path, commit):
         self.file_history = GitFileHistory(path, commit)
-        self.path = path
         self.scroll_line = 0
 
     def run(self):
@@ -166,7 +165,7 @@ class GitBrowser(object):
 
         self.status_win.clear()
         status = '%s @ %s by %s' % (
-            self.path,
+            self.file_history.path,
             self.file_history.current_commit.sha[:7],
             self.file_history.current_commit.author,
         )
