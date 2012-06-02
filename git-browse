@@ -14,24 +14,89 @@ def bind_keys(*keys):
     return decorator
 
 
+class GitCommit(object):
+    def __init__(self, sha, author, message):
+        self.sha = sha
+        self.author = author
+        self.message = message
+
+
+class GitFileHistory(object):
+    def __init__(self, path, start_commit):
+        #TODO Validate path
+        #TODO Validate commit
+
+        self.path = path
+
+        p = os.popen('git log %s --pretty="%s" -- %s' % (
+            start_commit,
+            '%H%n%an%n%s%n',
+            self.path,
+        ))
+        output = p.read().split('\n\n')
+
+        self.commits = [GitCommit(*c.split('\n', 2)) for c in output if c]
+        self.index = 0
+
+    @property
+    def current_commit(self):
+        return self.commits[self.index]
+
+    def next(self):
+        if self.index <= 0:
+            return False
+
+        self.index -= 1
+        return True
+
+    def prev(self):
+        if self.index >= len(self.commits) - 1:
+            return False
+
+        self.index += 1
+        return True
+
+    def blame(self):
+        lines = []
+
+        p = os.popen('git blame -p %s %s' % (
+            self.path,
+            self.current_commit.sha,
+        ))
+
+        while True:
+            header = p.readline()
+            if not header:
+                break
+
+            # Header format:
+            # commit_sha original_line final_line[ lines_in_group]
+            sha, original_line, final_line = header.split(' ')[:3]
+
+            line = p.readline()
+
+            # Skip any addition headers describing the commit
+            while not line.startswith('\t'):
+                line = p.readline()
+
+            lines.append((sha, line[1:], sha == self.current_commit.sha))
+
+        return lines
+
+
 class GitBrowser(object):
     def __init__(self, screen, path, commit):
         curses.curs_set(0)
-        curses.start_color()
 
+        curses.start_color()
         curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
         curses.init_pair(2, curses.COLOR_YELLOW, curses.COLOR_BLACK)
         curses.init_pair(3, curses.COLOR_BLUE, curses.COLOR_BLACK)
-
         self.GREEN = curses.color_pair(1)
         self.YELLOW = curses.color_pair(2)
         self.BLUE = curses.color_pair(3)
 
-        self.commits = {}
-
-        #TODO Validate path
-        #TODO Validate commit
-
+        self.file_history = GitFileHistory(path, commit)
         self.screen = screen
         self.path = path
 
@@ -41,68 +106,30 @@ class GitBrowser(object):
         self.code_win = screen.subwin(curses.LINES, curses.COLS-9, 0, 9)
         self.status_win = screen.subwin(curses.LINES-1, 0)
 
-        self.commit = commit
-        self.read_history()
-
-        commit_offset = 0
-        while self.commit not in self.commits:
-            p = os.popen('git log %s~%d -1 --pretty="%%H" -- %s' % (
-                self.commit,
-                commit_offset,
-                path
-            ))
-            latest_commit = p.read().strip()
-            self.commit = latest_commit
-            commit_offset += 1
-
-    def read_history(self):
-        self.lines = []
-
-        p = os.popen('git blame -p %s %s' % (self.path, self.commit), 'r')
-
-        while True:
-            header = p.readline()
-            if not header:
-                break
-
-            # Header format:
-            # commit_sha original_line final_line[ lines_in_group]
-            commit, original_line, final_line = header.split(' ')[:3]
-
-            line = p.readline()
-
-            # Parse any addition headers describing the commit
-            commit_description = {}
-            while not line.startswith('\t'):
-                h_parts = line.split(' ', 1)
-                h_field = h_parts[0]
-                commit_description[h_field] = len(h_parts) < 2 or h_parts[1]
-
-                line = p.readline()
-
-            self.lines.append((commit, line[1:], ))
-
-            if commit_description:
-                self.commits.setdefault(commit, {}).update(commit_description)
-
     def draw(self):
+        lines = self.file_history.blame()
+
         start = self.scroll_line
         stop = self.scroll_line + curses.LINES - 1
-        visible_lines = self.lines[start:stop]
+        visible_lines = lines[start:stop]
 
         self.commits_win.clear()
         self.code_win.clear()
-        for i, (commit, line) in enumerate(visible_lines):
+        for i, (commit, line, current) in enumerate(visible_lines):
             self.commits_win.addstr(i, 0, commit[:7], self.YELLOW)
             self.code_win.addstr(i, 0, line[0:curses.COLS-9],
-                                 self.GREEN if commit == self.commit else 0)
+                                 self.GREEN if current else 0)
 
-            if commit == self.commit:
+            if current:
                 self.commits_win.addstr(i, 7, '+', self.GREEN)
 
         self.status_win.clear()
-        self.status_win.addstr(0, 0, '%s @ %s' % (self.path, self.commit[:7]),
-                               self.BLUE)
+        status = '%s @ %s by %s' % (
+            self.path,
+            self.file_history.current_commit.sha[:7],
+            self.file_history.current_commit.author,
+        )
+        self.status_win.addstr(0, 0, status, self.BLUE)
 
         self.commits_win.noutrefresh()
         self.code_win.noutrefresh()
@@ -147,27 +174,17 @@ class GitBrowser(object):
 
     @bind_keys('n')
     def next_commit(self):
-        for commit, details in self.commits.items():
-            prev = details.get('previous', '')
-            if prev.startswith(self.commit):
-                self.commit = commit
-                self.read_history()
-                return
-
-        curses.beep()
+        if not self.file_history.next():
+            curses.beep()
 
     @bind_keys('p')
     def prev_commit(self):
-        prev = self.commits[self.commit].get('previous')
-        if not prev:
+        if not self.file_history.prev():
             curses.beep()
-            return
-
-        self.commit, self.path = prev.strip().split(' ')
-        self.read_history()
 
     def max_scroll_line(self):
-        return len(self.lines) - curses.LINES + 1
+        lines = self.file_history.blame()
+        return len(lines) - curses.LINES + 1
 
 
 def main_loop(screen, path, commit):
