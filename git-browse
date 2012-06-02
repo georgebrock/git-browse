@@ -7,7 +7,8 @@ key_bindings = {}
 def bind_keys(*keys):
     def decorator(func):
         for k in keys:
-            key_bindings[ord(k)] = func.__name__
+            code = ord(k) if type(k) is str else k
+            key_bindings[code] = func.__name__
         return func
     return decorator
 
@@ -22,7 +23,7 @@ class GitBrowser(object):
     def wait_for_key(self):
         return self.stdscr.getch()
 
-    @bind_keys('j')
+    @bind_keys('j', curses.KEY_DOWN)
     def down(self, lines=1):
         self.stdscr.addstr(0, 0, "Down")
 
@@ -30,7 +31,7 @@ class GitBrowser(object):
     def page_down(self):
         self.stdscr.addstr(0, 0, "Page down")
 
-    @bind_keys('k')
+    @bind_keys('k', curses.KEY_UP)
     def up(self, lines=1):
         pass
 
