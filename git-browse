@@ -73,6 +73,8 @@ class GitBrowser(object):
         stop = self.scroll_line + curses.LINES - 1
         visible_lines = self.lines[start:stop]
 
+        self.commits_win.clear()
+        self.code_win.clear()
         for i, (commit, line) in enumerate(visible_lines):
             self.commits_win.addstr(i, 0, commit[:7])
             self.code_win.addstr(i, 0, line[0:curses.COLS-9])
