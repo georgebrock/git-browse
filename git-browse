@@ -21,7 +21,15 @@ class GitBrowser(object):
         self.stdscr.refresh()
 
     def wait_for_key(self):
-        return self.stdscr.getch()
+        return self.stdscr.getch(self.height - 1, 0)
+
+    @property
+    def width(self):
+        return self.stdscr.getmaxyx()[1]
+
+    @property
+    def height(self):
+        return self.stdscr.getmaxyx()[0]
 
     @bind_keys('j', curses.KEY_DOWN)
     def down(self, lines=1):
