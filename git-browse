@@ -20,9 +20,12 @@ class GitBrowser(object):
 
         self.commits = {}
 
+        #TODO Validate path
+
         p = os.popen('git log %s -1 --pretty="%%H" -- %s' % (commit, path))
         latest_commit = p.read().strip()
         self.commit = latest_commit
+        #TODO Handle a bad commit
 
         self.screen = screen
         self.path = path
