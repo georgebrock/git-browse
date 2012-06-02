@@ -15,13 +15,12 @@ def bind_keys(*keys):
 
 
 class GitBrowser(object):
-    def __init__(self, stdscr, path, commit):
-        self.stdscr = stdscr
+    def __init__(self, screen, path, commit):
+        self.screen = screen
         self.path = path
         self.commit = commit
 
         self.read_history()
-
         #TODO Create pads for commits and content
 
     def read_history(self):
@@ -72,15 +71,15 @@ class GitBrowser(object):
 
     @property
     def width(self):
-        return self.stdscr.getmaxyx()[1]
+        return self.screen.getmaxyx()[1]
 
     @property
     def height(self):
-        return self.stdscr.getmaxyx()[0]
+        return self.screen.getmaxyx()[0]
 
     @bind_keys('j', curses.KEY_DOWN)
     def down(self, lines=1):
-        self.stdscr.addstr(0, 0, "Down %d" % lines)
+        self.screen.addstr(0, 0, "Down %d" % lines)
 
     @bind_keys('f')
     def page_down(self):
@@ -113,8 +112,8 @@ class GitBrowser(object):
         self.read_history()
 
 
-def main_loop(stdscr, path, commit):
-    browser = GitBrowser(stdscr, path, commit)
+def main_loop(screen, path, commit):
+    browser = GitBrowser(screen, path, commit)
 
     while True:
         browser.draw()
