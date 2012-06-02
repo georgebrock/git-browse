@@ -17,6 +17,15 @@ def bind_keys(*keys):
 class GitBrowser(object):
     def __init__(self, screen, path, commit):
         curses.curs_set(0)
+        curses.start_color()
+
+        curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
+        curses.init_pair(2, curses.COLOR_YELLOW, curses.COLOR_BLACK)
+        curses.init_pair(3, curses.COLOR_BLUE, curses.COLOR_BLACK)
+
+        self.GREEN = curses.color_pair(1)
+        self.YELLOW = curses.color_pair(2)
+        self.BLUE = curses.color_pair(3)
 
         self.commits = {}
 
@@ -84,14 +93,16 @@ class GitBrowser(object):
         self.commits_win.clear()
         self.code_win.clear()
         for i, (commit, line) in enumerate(visible_lines):
-            self.commits_win.addstr(i, 0, commit[:7])
-            self.code_win.addstr(i, 0, line[0:curses.COLS-9])
+            self.commits_win.addstr(i, 0, commit[:7], self.YELLOW)
+            self.code_win.addstr(i, 0, line[0:curses.COLS-9],
+                                 self.GREEN if commit == self.commit else 0)
 
             if commit == self.commit:
-                self.commits_win.addstr(i, 7, '+')
+                self.commits_win.addstr(i, 7, '+', self.GREEN)
 
         self.status_win.clear()
-        self.status_win.addstr(0, 0, '%s @ %s' % (self.path, self.commit[:7]))
+        self.status_win.addstr(0, 0, '%s @ %s' % (self.path, self.commit[:7]),
+                               self.BLUE)
 
         self.commits_win.noutrefresh()
         self.code_win.noutrefresh()
