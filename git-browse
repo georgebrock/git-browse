@@ -16,6 +16,8 @@ def bind_keys(*keys):
 
 class GitBrowser(object):
     def __init__(self, screen, path, commit):
+        curses.curs_set(0)
+
         self.screen = screen
         self.path = path
         self.commit = commit
