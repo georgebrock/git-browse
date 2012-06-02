@@ -92,7 +92,41 @@ class GitFileHistory(object):
 
 
 class GitBrowser(object):
-    def __init__(self, screen, path, commit):
+    def __init__(self, path, commit):
+        self.file_history = GitFileHistory(path, commit)
+        self.path = path
+        self.scroll_line = 0
+
+    def run(self):
+        self.setup_curses()
+
+        try:
+            while True:
+                self.draw()
+                c = self.screen.getch()
+
+                if c == ord('q'):
+                    self.teardown_curses()
+                    return
+                if c == ord('s'):
+                    self.teardown_curses()
+                    current_sha = self.file_history.current_commit.sha
+                    os.execvp('git', ('git', 'show', current_sha))
+                    return
+                elif c in key_bindings:
+                    getattr(self, key_bindings[c])()
+                else:
+                    curses.beep()
+        except:
+            self.teardown_curses()
+            raise
+
+    def setup_curses(self):
+        self.screen = curses.initscr()
+        curses.noecho()
+        curses.cbreak()
+        self.screen.keypad(1)
+
         curses.curs_set(0)
 
         curses.start_color()
@@ -103,15 +137,15 @@ class GitBrowser(object):
         self.YELLOW = curses.color_pair(2)
         self.BLUE = curses.color_pair(3)
 
-        self.file_history = GitFileHistory(path, commit)
-        self.screen = screen
-        self.path = path
+        self.commits_win = self.screen.subwin(curses.LINES-1, 8, 0, 0)
+        self.code_win = self.screen.subwin(curses.LINES-1, curses.COLS-9, 0, 9)
+        self.status_win = self.screen.subwin(curses.LINES-2, 0)
 
-        self.scroll_line = 0
-
-        self.commits_win = screen.subwin(curses.LINES-1, 8, 0, 0)
-        self.code_win = screen.subwin(curses.LINES-1, curses.COLS-9, 0, 9)
-        self.status_win = screen.subwin(curses.LINES-2, 0)
+    def teardown_curses(self):
+        curses.nocbreak()
+        self.screen.keypad(0)
+        curses.echo()
+        curses.endwin()
 
     def draw(self):
         lines = self.file_history.blame()
@@ -144,9 +178,6 @@ class GitBrowser(object):
         self.code_win.noutrefresh()
         self.status_win.noutrefresh()
         curses.doupdate()
-
-    def wait_for_key(self):
-        return self.screen.getch()
 
     @bind_keys('j', curses.KEY_DOWN)
     def down(self, lines=1):
@@ -196,24 +227,6 @@ class GitBrowser(object):
         return len(lines) - curses.LINES + 1
 
 
-def main_loop(screen, path, rev):
-    browser = GitBrowser(screen, path, rev)
-
-    while True:
-        browser.draw()
-        c = browser.wait_for_key()
-
-        if c == ord('q'):
-            return
-        if c == ord('s'):
-            current_sha = browser.file_history.current_commit.sha
-            return ('git', ('git', 'show', current_sha))
-        elif c in key_bindings:
-            getattr(browser, key_bindings[c])()
-        else:
-            curses.beep()
-
-
 if __name__ == '__main__':
     import argparse
 
@@ -224,6 +237,5 @@ if __name__ == '__main__':
                         help='the path to the file you want to examine')
     args = parser.parse_args()
 
-    exit_command = curses.wrapper(main_loop, args.file, args.rev)
-    if exit_command:
-        os.execvp(*exit_command)
+    browser = GitBrowser(args.file, args.rev)
+    browser.run()
