@@ -102,15 +102,15 @@ class GitBrowser(object):
 
         self.scroll_line = 0
 
-        self.commits_win = screen.subwin(curses.LINES, 8, 0, 0)
-        self.code_win = screen.subwin(curses.LINES, curses.COLS-9, 0, 9)
-        self.status_win = screen.subwin(curses.LINES-1, 0)
+        self.commits_win = screen.subwin(curses.LINES-1, 8, 0, 0)
+        self.code_win = screen.subwin(curses.LINES-1, curses.COLS-9, 0, 9)
+        self.status_win = screen.subwin(curses.LINES-2, 0)
 
     def draw(self):
         lines = self.file_history.blame()
 
         start = self.scroll_line
-        stop = self.scroll_line + curses.LINES - 1
+        stop = self.scroll_line + curses.LINES - 2
         visible_lines = lines[start:stop]
 
         self.commits_win.clear()
@@ -129,7 +129,9 @@ class GitBrowser(object):
             self.file_history.current_commit.sha[:7],
             self.file_history.current_commit.author,
         )
-        self.status_win.addstr(0, 0, status, self.BLUE)
+        commit_msg = self.file_history.current_commit.message[:curses.COLS-1]
+        self.status_win.addstr(0, 0, status)
+        self.status_win.addstr(1, 0, commit_msg)
 
         self.commits_win.noutrefresh()
         self.code_win.noutrefresh()
