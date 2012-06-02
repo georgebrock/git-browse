@@ -254,7 +254,7 @@ if __name__ == '__main__':
             '''),
         )
     parser.add_argument('rev', nargs='?', default='HEAD',
-                        help='a Git revision to start from')
+                        help='a Git revision to start from (defaults to HEAD)')
     parser.add_argument('file',
                         help='the path to the file you want to examine')
     args = parser.parse_args()
