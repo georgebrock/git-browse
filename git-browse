@@ -56,11 +56,19 @@ class GitBrowser(object):
                 self.commits[commit] = commit_description
 
     def draw(self):
-        #self.stdscr.erase()
-        self.stdscr.refresh()
+        commits_pad = curses.newpad(len(self.lines)+1, 8)
+        lines_pad = curses.newpad(len(self.lines)+1, 200) #FIXME width
+
+        for i, (commit, line) in enumerate(self.lines):
+            commits_pad.addstr(i, 0, commit[:7])
+            lines_pad.addstr(i, 0, line)
+
+        commits_pad.refresh(0,0, 0,0, self.height-1,8)
+        lines_pad.refresh(0,0, 0,9, self.height-1,self.width-8)
 
     def wait_for_key(self):
-        return self.stdscr.getch(self.height - 1, 0)
+        return
+        return self.screen.getch()
 
     @property
     def width(self):
