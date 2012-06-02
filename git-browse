@@ -105,7 +105,7 @@ class GitBrowser(object):
                 self.draw()
                 c = self.screen.getch()
 
-                if c == ord('q'):
+                if c == ord('q') or c == ord('Q'):
                     self.teardown_curses()
                     return
                 if c == ord('s'):
@@ -179,7 +179,7 @@ class GitBrowser(object):
         self.status_win.noutrefresh()
         curses.doupdate()
 
-    @bind_keys('j', curses.KEY_DOWN)
+    @bind_keys('j', 'e', curses.KEY_ENTER, curses.KEY_DOWN)
     def down(self, lines=1):
         max_scroll_line = self.max_scroll_line()
         if self.scroll_line == max_scroll_line:
@@ -188,11 +188,15 @@ class GitBrowser(object):
 
         self.scroll_line = min(self.scroll_line + lines, max_scroll_line)
 
-    @bind_keys('f', ' ', curses.KEY_NPAGE)
+    @bind_keys('d')
+    def half_page_down(self):
+        self.down((curses.LINES - 2) / 2)
+
+    @bind_keys('f', ' ', 'z', curses.KEY_NPAGE)
     def page_down(self):
         self.down(curses.LINES - 2)
 
-    @bind_keys('k', curses.KEY_UP)
+    @bind_keys('k', 'y', curses.KEY_UP)
     def up(self, lines=1):
         if self.scroll_line == 0:
             curses.beep()
@@ -200,15 +204,19 @@ class GitBrowser(object):
 
         self.scroll_line = max(self.scroll_line - lines, 0)
 
-    @bind_keys('b', curses.KEY_PPAGE)
+    @bind_keys('u')
+    def half_page_up(self):
+        self.up((curses.LINES - 2) / 2)
+
+    @bind_keys('b', 'w', curses.KEY_PPAGE)
     def page_up(self):
         self.up(curses.LINES - 2)
 
-    @bind_keys('g', curses.KEY_HOME)
+    @bind_keys('g', '<', curses.KEY_HOME)
     def home(self):
         self.scroll_line = 0
 
-    @bind_keys('G', curses.KEY_END)
+    @bind_keys('G', '>', curses.KEY_END)
     def end(self):
         self.scroll_line = self.max_scroll_line()
 
@@ -242,18 +250,20 @@ if __name__ == '__main__':
                interactive blame output. If you use less or vim they should
                be somewhat familiar:
 
-                j or DOWN    move down one line
-                k or UP      move up one line
-                f or SPACE   move down one screen
-                b            move up one screen
-                G or END     move to the bottom of the file
-                g or HOME    move to the top of the file
+                j e RETURN DOWN         move down one line
+                k y UP                  move up one line
+                f z SPACE PAGE-DOWN     move down one screen
+                b w PAGE-UP             move up one screen
+                d                       move down half a screen
+                u                       move up half a screen
+                G > END                 move to the bottom of the file
+                g < HOME                move to the top of the file
 
-                p            move to the previous commit
-                n            move to the next commit
+                p                       move to the previous commit
+                n                       move to the next commit
 
-                q            quit
-                s            quit, and run `git show`
+                q Q                     quit
+                s                       quit, and run `git show`
             '''),
         )
     parser.add_argument('rev', nargs='?', default='HEAD',
