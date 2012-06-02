@@ -229,8 +229,30 @@ class GitBrowser(object):
 
 if __name__ == '__main__':
     import argparse
+    import textwrap
 
-    parser = argparse.ArgumentParser(description='Interactive git blame')
+    parser = argparse.ArgumentParser(
+        description=textwrap.dedent('''\
+                Browse the Git history of a single file. Similar to
+                git blame, but interactive.
+            '''),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=textwrap.dedent('''\
+               You can use the following key commands to move around the
+               interactive blame output. If you use less or vim they should
+               be somewhat familiar:
+
+                j or DOWN    move down one line
+                k or UP      move up one line
+                f or SPACE   move down one screen
+                b            move up one screen
+                G or END     move to the bottom of the file
+                g or HOME    move to the top of the file
+
+                p            move to the previous commit
+                n            move to the next commit
+            '''),
+        )
     parser.add_argument('rev', nargs='?', default='HEAD',
                         help='a Git revision to start from')
     parser.add_argument('file',
