@@ -26,6 +26,7 @@ class GitBrowser(object):
 
         self.commits_win = screen.subwin(curses.LINES, 8, 0, 0)
         self.code_win = screen.subwin(curses.LINES, curses.COLS-9, 0, 9)
+        self.status_win = screen.subwin(curses.LINES-1, 0)
 
         self.read_history()
 
@@ -69,8 +70,12 @@ class GitBrowser(object):
             self.commits_win.addstr(i, 0, commit[:7])
             self.code_win.addstr(i, 0, line[0:curses.COLS-9])
 
+        self.status_win.clear()
+        self.status_win.addstr(0, 0, '%s @ %s' % (self.path, self.commit[:7]))
+
         self.commits_win.noutrefresh()
         self.code_win.noutrefresh()
+        self.status_win.noutrefresh()
         curses.doupdate()
 
     def wait_for_key(self):
