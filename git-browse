@@ -190,7 +190,7 @@ class GitBrowser(object):
 
     @bind_keys('f', ' ')
     def page_down(self):
-        self.down(curses.LINES - 1)
+        self.down(curses.LINES - 2)
 
     @bind_keys('k', curses.KEY_UP)
     def up(self, lines=1):
@@ -202,7 +202,7 @@ class GitBrowser(object):
 
     @bind_keys('b')
     def page_up(self):
-        self.up(curses.LINES - 1)
+        self.up(curses.LINES - 2)
 
     @bind_keys('g')
     def home(self):
