@@ -37,8 +37,7 @@ class GitBrowser(object):
 
             # Header format:
             # commit_sha original_line final_line[ lines_in_group]
-            header_parts = header.split(' ')
-            commit = header_parts[0]
+            commit, original_line, final_line = header.split(' ')[:3]
 
             line = p.readline()
 
