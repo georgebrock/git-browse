@@ -25,7 +25,9 @@ class GitBrowser(object):
         #TODO Create pads for commits and content
 
     def read_history(self):
-        self.history = []
+        self.lines = []
+        self.commits = {}
+
         p = os.popen('git blame -p %s %s' % (self.path, self.commit), 'r')
 
         while True:
@@ -39,10 +41,20 @@ class GitBrowser(object):
             commit = header_parts[0]
 
             line = p.readline()
+
+            # Parse any addition headers describing the commit
+            commit_description = {}
             while not line.startswith('\t'):
+                h_parts = line.split(' ', 1)
+                h_field = h_parts[0]
+                commit_description[h_field] = len(h_parts) < 2 or h_parts[1]
+
                 line = p.readline()
 
-            self.history.append((commit, line[1:], ))
+            self.lines.append((commit, line[1:], ))
+
+            if commit_description:
+                self.commits[commit] = commit_description
 
     def draw(self):
         #self.stdscr.erase()
