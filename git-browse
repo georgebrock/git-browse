@@ -123,8 +123,14 @@ class GitBrowser(object):
 
     @bind_keys('n')
     def next_commit(self):
-        #TODO Move to next commit
-        self.read_history()
+        for commit, details in self.commits.items():
+            prev = details.get('previous', '')
+            if prev.startswith(self.commit):
+                self.commit = commit
+                self.read_history()
+                return
+
+        curses.beep()
 
     @bind_keys('p')
     def prev_commit(self):
