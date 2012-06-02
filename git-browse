@@ -18,6 +18,8 @@ class GitBrowser(object):
     def __init__(self, screen, path, commit):
         curses.curs_set(0)
 
+        self.commits = {}
+
         self.screen = screen
         self.path = path
         self.commit = commit
@@ -32,7 +34,6 @@ class GitBrowser(object):
 
     def read_history(self):
         self.lines = []
-        self.commits = {}
 
         p = os.popen('git blame -p %s %s' % (self.path, self.commit), 'r')
 
@@ -59,7 +60,7 @@ class GitBrowser(object):
             self.lines.append((commit, line[1:], ))
 
             if commit_description:
-                self.commits[commit] = commit_description
+                self.commits.setdefault(commit, {}).update(commit_description)
 
     def draw(self):
         start = self.scroll_line
