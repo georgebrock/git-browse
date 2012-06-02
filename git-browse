@@ -188,7 +188,7 @@ class GitBrowser(object):
 
         self.scroll_line = min(self.scroll_line + lines, max_scroll_line)
 
-    @bind_keys('f', ' ')
+    @bind_keys('f', ' ', curses.KEY_NPAGE)
     def page_down(self):
         self.down(curses.LINES - 2)
 
@@ -200,15 +200,15 @@ class GitBrowser(object):
 
         self.scroll_line = max(self.scroll_line - lines, 0)
 
-    @bind_keys('b')
+    @bind_keys('b', curses.KEY_PPAGE)
     def page_up(self):
         self.up(curses.LINES - 2)
 
-    @bind_keys('g')
+    @bind_keys('g', curses.KEY_HOME)
     def home(self):
         self.scroll_line = 0
 
-    @bind_keys('G')
+    @bind_keys('G', curses.KEY_END)
     def end(self):
         self.scroll_line = self.max_scroll_line()
 
