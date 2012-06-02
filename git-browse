@@ -157,6 +157,8 @@ def main_loop(screen, path, commit):
 
         if c == ord('q'):
             return
+        if c == ord('s'):
+            return ('git', ('git', 'show', browser.commit))
         elif c in key_bindings:
             getattr(browser, key_bindings[c])()
         else:
@@ -165,4 +167,8 @@ def main_loop(screen, path, commit):
 #TODO Get path and commit from command line
 path = 'git-browse'
 commit = 'HEAD'
-curses.wrapper(main_loop, path, commit)
+
+exit_command = curses.wrapper(main_loop, path, commit)
+if exit_command:
+    #print exit_command
+    os.execvp(*exit_command)
