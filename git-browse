@@ -132,9 +132,10 @@ def main_loop(screen, path, commit):
 
         if c == ord('q'):
             return
-
-        if c in key_bindings:
+        elif c in key_bindings:
             getattr(browser, key_bindings[c])()
+        else:
+            curses.beep()
 
 #TODO Get path and commit from command line
 path = 'git-browse'
