@@ -8,7 +8,7 @@ interface.
 
 1. Clone the Git repository:
 
-        git clone git@github.com:georgebrock/git-browse.git
+        git clone git://github.com/georgebrock/git-browse.git
 
 2. Link to the `git-browse` file so that it's somewhere on your path. For
    example, if `~/bin` was on your path you could do this:
