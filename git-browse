@@ -108,7 +108,7 @@ class GitBrowser(object):
                 if c == ord('q') or c == ord('Q'):
                     self.teardown_curses()
                     return
-                if c == ord('s'):
+                elif c == ord('s'):
                     self.teardown_curses()
                     current_sha = self.file_history.current_commit.sha
                     os.execvp('git', ('git', 'show', current_sha))
