@@ -6,7 +6,7 @@ interface.
 
 ## Installation
 
-1. Clone the git repository:
+1. Clone the Git repository:
 
         git clone git@github.com:georgebrock/git-browse.git
 
