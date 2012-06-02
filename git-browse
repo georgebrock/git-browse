@@ -20,9 +20,12 @@ class GitBrowser(object):
 
         self.commits = {}
 
+        p = os.popen('git log %s -1 --pretty="%%H" -- %s' % (commit, path))
+        latest_commit = p.read().strip()
+        self.commit = latest_commit
+
         self.screen = screen
         self.path = path
-        self.commit = commit
 
         self.scroll_line = 0
 
