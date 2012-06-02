@@ -224,7 +224,7 @@ class GitBrowser(object):
 
     def max_scroll_line(self):
         lines = self.file_history.blame()
-        return len(lines) - curses.LINES + 1
+        return len(lines) - curses.LINES + 2
 
 
 if __name__ == '__main__':
