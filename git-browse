@@ -67,7 +67,7 @@ class GitBrowser(object):
 
         for i, (commit, line) in enumerate(visible_lines):
             self.commits_win.addstr(i, 0, commit[:7])
-            self.code_win.addstr(i, 0, line[0:curses.COLS-8])
+            self.code_win.addstr(i, 0, line[0:curses.COLS-9])
 
         self.commits_win.noutrefresh()
         self.code_win.noutrefresh()
