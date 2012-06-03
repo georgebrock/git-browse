@@ -28,7 +28,7 @@ class GitFileHistory(object):
 
         self.path = path
 
-        p = os.popen('git log %s --pretty="%s" -- %s' % (
+        p = os.popen('git log %s --follow --pretty="%s" -- %s' % (
             start_commit,
             '%H%n%an%n%s%n',
             self.path,
