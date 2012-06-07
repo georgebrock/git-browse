@@ -21,6 +21,15 @@ class GitCommit(object):
         self.message = message
 
 
+class GitBlameLine(object):
+    def __init__(self, sha, line, current, original_line, final_line):
+        self.sha = sha
+        self.line = line
+        self.current = current
+        self.original_line = original_line
+        self.final_line = final_line
+
+
 class GitFileHistory(object):
     def __init__(self, path, start_commit):
         #TODO Validate path
@@ -85,7 +94,13 @@ class GitFileHistory(object):
             while not line.startswith('\t'):
                 line = p.readline()
 
-            lines.append((sha, line[1:], sha == self.current_commit.sha))
+            lines.append(GitBlameLine(
+                sha=sha,
+                line=line[1:],
+                current=(sha == self.current_commit.sha),
+                original_line=original_line,
+                final_line=final_line,
+            ))
 
         self._blame = lines
         return self._blame
@@ -160,22 +175,22 @@ class GitBrowser(object):
 
         self.commits_win.clear()
         self.code_win.clear()
-        for i, (commit, line, current) in enumerate(visible_lines):
+        for i, line in enumerate(visible_lines):
             if i + start == self.highlight_line:
                 commit_color = self.INV_YELLOW
                 plus_color = self.INV_GREEN
-                code_color = plus_color if current else self.INV_WHITE
+                code_color = plus_color if line.current else self.INV_WHITE
             else:
                 commit_color = self.YELLOW
                 plus_color = self.GREEN
-                code_color = plus_color if current else 0
+                code_color = plus_color if line.current else 0
 
-            self.commits_win.addstr(i, 0, commit[:7], commit_color)
+            self.commits_win.addstr(i, 0, line.sha[:7], commit_color)
 
             cols = curses.COLS - 9
-            visible_line = line[0:cols].rstrip().ljust(cols, ' ')
+            visible_line = line.line[0:cols].rstrip().ljust(cols, ' ')
             self.code_win.addstr(i, 0, visible_line, code_color)
-            if current:
+            if line.current:
                 self.commits_win.addstr(i, 7, '+', plus_color)
 
         self.status_win.clear()
