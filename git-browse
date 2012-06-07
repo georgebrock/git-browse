@@ -95,6 +95,7 @@ class GitBrowser(object):
     def __init__(self, path, commit):
         self.file_history = GitFileHistory(path, commit)
         self.scroll_line = 0
+        self.highlight_line = 0
 
     def run(self):
         self.setup_curses()
@@ -131,10 +132,14 @@ class GitBrowser(object):
         curses.start_color()
         curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
         curses.init_pair(2, curses.COLOR_YELLOW, curses.COLOR_BLACK)
-        curses.init_pair(3, curses.COLOR_BLUE, curses.COLOR_BLACK)
+        curses.init_pair(3, curses.COLOR_BLACK, curses.COLOR_WHITE)
+        curses.init_pair(4, curses.COLOR_BLACK, curses.COLOR_GREEN)
+        curses.init_pair(5, curses.COLOR_BLACK, curses.COLOR_YELLOW)
         self.GREEN = curses.color_pair(1)
         self.YELLOW = curses.color_pair(2)
-        self.BLUE = curses.color_pair(3)
+        self.INV_WHITE = curses.color_pair(3)
+        self.INV_GREEN = curses.color_pair(4)
+        self.INV_YELLOW = curses.color_pair(5)
 
         self.commits_win = self.screen.subwin(curses.LINES-1, 8, 0, 0)
         self.code_win = self.screen.subwin(curses.LINES-1, curses.COLS-9, 0, 9)
@@ -156,12 +161,22 @@ class GitBrowser(object):
         self.commits_win.clear()
         self.code_win.clear()
         for i, (commit, line, current) in enumerate(visible_lines):
-            self.commits_win.addstr(i, 0, commit[:7], self.YELLOW)
-            self.code_win.addstr(i, 0, line[0:curses.COLS-9],
-                                 self.GREEN if current else 0)
+            if i + start == self.highlight_line:
+                commit_color = self.INV_YELLOW
+                plus_color = self.INV_GREEN
+                code_color = plus_color if current else self.INV_WHITE
+            else:
+                commit_color = self.YELLOW
+                plus_color = self.GREEN
+                code_color = plus_color if current else 0
 
+            self.commits_win.addstr(i, 0, commit[:7], commit_color)
+
+            cols = curses.COLS - 9
+            visible_line = line[0:cols].rstrip().ljust(cols, ' ')
+            self.code_win.addstr(i, 0, visible_line, code_color)
             if current:
-                self.commits_win.addstr(i, 7, '+', self.GREEN)
+                self.commits_win.addstr(i, 7, '+', plus_color)
 
         self.status_win.clear()
         status = '%s @ %s by %s' % (
@@ -180,12 +195,16 @@ class GitBrowser(object):
 
     @bind_keys('j', 'e', curses.KEY_ENTER, curses.KEY_DOWN)
     def down(self, lines=1):
-        max_scroll_line = self.max_scroll_line()
-        if self.scroll_line == max_scroll_line:
+        max_highlight = len(self.file_history.blame()) - 1
+        if self.highlight_line >= max_highlight:
             curses.beep()
             return
 
-        self.scroll_line = min(self.scroll_line + lines, max_scroll_line)
+        self.highlight_line = min(self.highlight_line + lines, max_highlight)
+
+        if self.highlight_line > self.scroll_line + curses.LINES - 3:
+            max_scroll_line = self.max_scroll_line()
+            self.scroll_line = min(self.scroll_line + lines, max_scroll_line)
 
     @bind_keys('d')
     def half_page_down(self):
@@ -197,11 +216,14 @@ class GitBrowser(object):
 
     @bind_keys('k', 'y', curses.KEY_UP)
     def up(self, lines=1):
-        if self.scroll_line == 0:
+        if self.highlight_line <= 0:
             curses.beep()
             return
 
-        self.scroll_line = max(self.scroll_line - lines, 0)
+        self.highlight_line = max(self.highlight_line - lines, 0)
+
+        if self.highlight_line < self.scroll_line:
+            self.scroll_line = self.highlight_line
 
     @bind_keys('u')
     def half_page_up(self):
