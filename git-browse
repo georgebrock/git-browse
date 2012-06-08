@@ -325,7 +325,7 @@ class GitBrowser(object):
         self.INV_GREEN = curses.color_pair(4)
         self.INV_YELLOW = curses.color_pair(5)
 
-        self.commits_win = self.screen.subwin(curses.LINES-1, 8, 0, 0)
+        self.commits_win = self.screen.subwin(curses.LINES-1, 9, 0, 0)
         self.code_win = self.screen.subwin(curses.LINES-1, curses.COLS-9, 0, 9)
         self.status_win = self.screen.subwin(curses.LINES-2, 0)
 
@@ -355,6 +355,7 @@ class GitBrowser(object):
                 code_color = plus_color if line.current else 0
 
             self.commits_win.addstr(i, 0, line.sha[:7], commit_color)
+            self.commits_win.addstr(i, 7, '  ', code_color)
 
             cols = curses.COLS - 9
             visible_line = line.line[0:cols].rstrip().ljust(cols, ' ')
