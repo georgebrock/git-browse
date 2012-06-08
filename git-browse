@@ -15,6 +15,9 @@ def bind_keys(*keys):
 
 
 class GitCommit(object):
+    """
+    Stores simple information about a single Git commit.
+    """
     def __init__(self, sha, author, message):
         self.sha = sha
         self.author = author
@@ -22,6 +25,9 @@ class GitCommit(object):
 
 
 class GitBlameLine(object):
+    """
+    Stores the blame output for a single line of a file.
+    """
     def __init__(self, sha, line, current, original_line, final_line):
         self.sha = sha
         self.line = line
@@ -31,6 +37,16 @@ class GitBlameLine(object):
 
 
 class GitFileHistory(object):
+    """
+    Responsible for following the history of a single file, moving around
+    within that history, and giving information about the state of the file
+    at a particular revision or the differences between revisions.
+
+    Most operations are relative to the current commit, which can be changed
+    with the previous and next mthods and accessed through the current_commit
+    property.
+    """
+
     def __init__(self, path, start_commit):
         #TODO Validate path
         #TODO Validate commit
@@ -55,6 +71,10 @@ class GitFileHistory(object):
         return self.commits[self._index]
 
     def next(self):
+        """
+        Moves to the next commit that touched this file, returning False
+        if we're already at the last commit that touched the file.
+        """
         if self._index <= 0:
             return False
 
@@ -63,6 +83,10 @@ class GitFileHistory(object):
         return True
 
     def prev(self):
+        """
+        Moves to the previous commit that touched this file, returning False
+        if we're already at the first commit that touched the file.
+        """
         if self._index >= len(self.commits) - 1:
             return False
 
@@ -71,6 +95,10 @@ class GitFileHistory(object):
         return True
 
     def blame(self):
+        """
+        Returns blame information for this file at the current commit as
+        a list of GitBlameLine objects.
+        """
         if self._blame:
             return self._blame
 
@@ -239,24 +267,33 @@ class GitFileHistory(object):
 
 
 class GitBrowser(object):
+    """
+    Provides the user interface for the git browse tool.
+    """
+
     def __init__(self, path, commit):
         self.file_history = GitFileHistory(path, commit)
         self.scroll_line = 0
         self.highlight_line = 0
 
     def run(self):
-        self.setup_curses()
+        """
+        Starts the curses interface. This method won't return until
+        the user presses a key that terminates the session.
+        """
+
+        self._setup_curses()
 
         try:
             while True:
-                self.draw()
+                self._draw()
                 c = self.screen.getch()
 
                 if c == ord('q') or c == ord('Q'):
-                    self.teardown_curses()
+                    self._teardown_curses()
                     return
                 elif c == ord('s'):
-                    self.teardown_curses()
+                    self._teardown_curses()
                     current_sha = self.file_history.current_commit.sha
                     os.execvp('git', ('git', 'show', current_sha))
                     return
@@ -265,10 +302,10 @@ class GitBrowser(object):
                 else:
                     curses.beep()
         except:
-            self.teardown_curses()
+            self._teardown_curses()
             raise
 
-    def setup_curses(self):
+    def _setup_curses(self):
         self.screen = curses.initscr()
         curses.noecho()
         curses.cbreak()
@@ -292,13 +329,13 @@ class GitBrowser(object):
         self.code_win = self.screen.subwin(curses.LINES-1, curses.COLS-9, 0, 9)
         self.status_win = self.screen.subwin(curses.LINES-2, 0)
 
-    def teardown_curses(self):
+    def _teardown_curses(self):
         curses.nocbreak()
         self.screen.keypad(0)
         curses.echo()
         curses.endwin()
 
-    def draw(self):
+    def _draw(self):
         lines = self.file_history.blame()
 
         start = self.scroll_line
