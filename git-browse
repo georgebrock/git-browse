@@ -287,7 +287,7 @@ class GitBrowser(object):
         try:
             while True:
                 self._draw()
-                c = self.screen.getch()
+                c = self.screen.getch(curses.LINES-1, 1)
 
                 if c == ord('q') or c == ord('Q'):
                     self._teardown_curses()
@@ -310,8 +310,6 @@ class GitBrowser(object):
         curses.noecho()
         curses.cbreak()
         self.screen.keypad(1)
-
-        curses.curs_set(0)
 
         curses.start_color()
         curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
@@ -364,14 +362,15 @@ class GitBrowser(object):
                 self.commits_win.addstr(i, 7, '+', plus_color)
 
         self.status_win.clear()
-        status = '%s @ %s by %s' % (
+        status = '%s @ %s by %s: ' % (
             self.file_history.path,
             self.file_history.current_commit.sha[:7],
             self.file_history.current_commit.author,
         )
         commit_msg = self.file_history.current_commit.message[:curses.COLS-1]
         self.status_win.addstr(0, 0, status)
-        self.status_win.addstr(1, 0, commit_msg)
+        self.status_win.addstr(0, len(status), commit_msg)
+        self.status_win.addstr(1, 0, ':')
 
         self.commits_win.noutrefresh()
         self.code_win.noutrefresh()
