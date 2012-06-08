@@ -420,10 +420,12 @@ class GitBrowser(object):
     @bind_keys('g', '<', curses.KEY_HOME)
     def home(self):
         self.scroll_line = 0
+        self.highlight_line = 0
 
     @bind_keys('G', '>', curses.KEY_END)
     def end(self):
         self.scroll_line = self.max_scroll_line()
+        self.highlight_line = len(self.file_history.blame()) - 1
 
     def _move_commit(self, method_name):
         start = self.file_history.current_commit.sha
