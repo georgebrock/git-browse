@@ -387,7 +387,7 @@ class GitBrowser(object):
         self.highlight_line = min(self.highlight_line + lines, max_highlight)
 
         if self.highlight_line > self.scroll_line + curses.LINES - 3:
-            max_scroll_line = self.max_scroll_line()
+            max_scroll_line = self._max_scroll_line()
             self.scroll_line = min(self.scroll_line + lines, max_scroll_line)
 
     @bind_keys('d')
@@ -424,7 +424,7 @@ class GitBrowser(object):
 
     @bind_keys('G', '>', curses.KEY_END)
     def end(self):
-        self.scroll_line = self.max_scroll_line()
+        self.scroll_line = self._max_scroll_line()
         self.highlight_line = len(self.file_history.blame()) - 1
 
     def _move_commit(self, method_name):
@@ -450,7 +450,7 @@ class GitBrowser(object):
     def prev_commit(self):
         self._move_commit('prev')
 
-    def max_scroll_line(self):
+    def _max_scroll_line(self):
         lines = self.file_history.blame()
         return len(lines) - curses.LINES + 2
 
