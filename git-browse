@@ -1,9 +1,14 @@
 #!/usr/bin/env python
 
 import curses
+from curses import ascii
+from curses.textpad import Textbox
 import os
+import sys
 
 key_bindings = {}
+
+#TODO Refactor current code into a ModalTextbox class
 
 def bind_keys(*keys):
     def decorator(func):
@@ -275,6 +280,40 @@ class GitBrowser(object):
         self.file_history = GitFileHistory(path, commit)
         self.scroll_line = 0
         self.highlight_line = 0
+        self.mode = '__command__'
+
+    def _process_key(self, c):
+        if c >= ord('0') and c <= ord('9'):
+            return c
+            #TODO Use numbers as multipliers for some commands
+            #TODO Use numbers to jump to a line
+
+        if self.mode == '__search__':
+            return c
+        #TODO Move into a method somewhere
+        #TODO Constant for search
+        elif c == ord('/'):
+            self.mode = '__search__'
+
+        if c == ord('q') or c == ord('Q'):
+            self._teardown_curses()
+            sys.exit(0)
+        elif c == ord('s'):
+            self._teardown_curses()
+            current_sha = self.file_history.current_commit.sha
+            os.execvp('git', ('git', 'show', current_sha))
+            sys.exit(0)
+        elif c in key_bindings:
+            getattr(self, key_bindings[c])()
+        elif not ascii.isprint(c):
+            return c
+        else:
+            curses.beep()
+
+        while len(self.command_input.gather()) > 0:
+            self.command_input.do_command(ascii.BS)
+
+        self._draw()
 
     def run(self):
         """
@@ -283,24 +322,17 @@ class GitBrowser(object):
         """
 
         self._setup_curses()
+        self._draw()
 
         try:
             while True:
-                self._draw()
-                c = self.screen.getch(curses.LINES-1, 1)
+                command = self.command_input.edit(self._process_key)
+                self.command_win.erase()
 
-                if c == ord('q') or c == ord('Q'):
-                    self._teardown_curses()
-                    return
-                elif c == ord('s'):
-                    self._teardown_curses()
-                    current_sha = self.file_history.current_commit.sha
-                    os.execvp('git', ('git', 'show', current_sha))
-                    return
-                elif c in key_bindings:
-                    getattr(self, key_bindings[c])()
-                else:
-                    curses.beep()
+                if self.mode == '__search__':
+                    #TODO search for command
+                    self.mode = '__command__'
+                    self._draw()
         except:
             self._teardown_curses()
             raise
@@ -325,7 +357,11 @@ class GitBrowser(object):
 
         self.commits_win = self.screen.subwin(curses.LINES-1, 9, 0, 0)
         self.code_win = self.screen.subwin(curses.LINES-1, curses.COLS-9, 0, 9)
-        self.status_win = self.screen.subwin(curses.LINES-2, 0)
+        self.status_win = self.screen.subwin(1, curses.COLS, curses.LINES-2, 0)
+        self.mode_win = self.screen.subwin(1, 2, curses.LINES-1, 0)
+        self.command_win = self.screen.subwin(1, curses.COLS-1,
+                                              curses.LINES-1, 1)
+        self.command_input = Textbox(self.command_win)
 
     def _teardown_curses(self):
         curses.nocbreak()
@@ -370,11 +406,18 @@ class GitBrowser(object):
         commit_msg = self.file_history.current_commit.message[:curses.COLS-1]
         self.status_win.addstr(0, 0, status)
         self.status_win.addstr(0, len(status), commit_msg)
-        self.status_win.addstr(1, 0, ':')
+
+        if self.mode == '__search__':
+            mode_char = '/'
+        else:
+            mode_char = ':'
+        self.mode_win.addstr(0, 0, mode_char)
 
         self.commits_win.noutrefresh()
         self.code_win.noutrefresh()
         self.status_win.noutrefresh()
+        self.mode_win.noutrefresh()
+        self.command_win.noutrefresh()
         curses.doupdate()
 
     @bind_keys('j', 'e', curses.KEY_ENTER, curses.KEY_DOWN)
