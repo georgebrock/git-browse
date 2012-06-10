@@ -349,6 +349,7 @@ if __name__ == '__main__':
                interactive blame output. If you use less they should be
                somewhat familiar:
 
+               NAVIGATING AROUND THE FILE:
                 j e RETURN DOWN         move down one line
                 k y UP                  move up one line
                 f z SPACE PAGE-DOWN     move down one screen
@@ -358,9 +359,11 @@ if __name__ == '__main__':
                 G > END                 move to the bottom of the file
                 g < HOME                move to the top of the file
 
+               NAVIGATING GIT HISTORY:
                 [                       move to the previous commit
                 ]                       move to the next commit
 
+               QUITTING:
                 q Q                     quit
                 s                       quit, and run `git show`
             '''),
