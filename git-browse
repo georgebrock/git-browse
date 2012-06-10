@@ -323,12 +323,12 @@ class GitBrowser(ModalScrollingInterface):
             # not out of range for the newly loaded revision of the file.
             self.highlight_line = self.highlight_line
 
-    @ModalScrollingInterface.key_bindings('n')
+    @ModalScrollingInterface.key_bindings('[')
     def next_commit(self, times=1):
         for i in range(0,times):
             self._move_commit('next')
 
-    @ModalScrollingInterface.key_bindings('p')
+    @ModalScrollingInterface.key_bindings(']')
     def prev_commit(self, times=1):
         for i in range(0,times):
             self._move_commit('prev')
@@ -358,8 +358,8 @@ if __name__ == '__main__':
                 G > END                 move to the bottom of the file
                 g < HOME                move to the top of the file
 
-                p                       move to the previous commit
-                n                       move to the next commit
+                [                       move to the previous commit
+                ]                       move to the next commit
 
                 q Q                     quit
                 s                       quit, and run `git show`
