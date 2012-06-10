@@ -33,6 +33,15 @@ Exit with <kbd>q</kbd>, or exit and pass the currently selected commit to
 
 Run `git browse -h` to see a full list of commands.
 
+## Features
+
+* The focused line is maintained when moving between revisions, even when
+  lines have been added or removed before the focused line.
+* Use less- and vim-style searching (<kbd>/</kbd> to search forwards,
+  <kbd>?</kbd> to search backwards, <kbd>n</kbd> and <kbd>N</kbd> to jump to
+  the next and previous matches).
+* Jump to a line by typing the line number and pressing <kbd>return</kbd>.
+
 ## Disclaimer
 
 This isn't extensively tested and probably contains all kinds of bugs. This
