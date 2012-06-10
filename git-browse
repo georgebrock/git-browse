@@ -346,12 +346,12 @@ class GitBrowser(ModalScrollingInterface):
             # not out of range for the newly loaded revision of the file.
             self.highlight_line = self.highlight_line
 
-    @ModalScrollingInterface.key_bindings('[')
+    @ModalScrollingInterface.key_bindings(']')
     def next_commit(self, times=1):
         for i in range(0,times):
             self._move_commit('next')
 
-    @ModalScrollingInterface.key_bindings(']')
+    @ModalScrollingInterface.key_bindings('[')
     def prev_commit(self, times=1):
         for i in range(0,times):
             self._move_commit('prev')
