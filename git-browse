@@ -40,6 +40,12 @@ parser = argparse.ArgumentParser(
            QUITTING:
             q Q                     quit
             s                       quit, and run `git show`
+
+           NOTES:
+           - Most of the commands above can be prefixed with a
+             number, e.g. 3j will move down three lines.
+           - Entering a number an hitting return will jump to
+             that line, e.g. 10<RETURN> will jump to line 10.
         '''),
     )
 parser.add_argument('rev', nargs='?', default='HEAD',

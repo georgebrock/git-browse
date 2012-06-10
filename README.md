@@ -24,8 +24,8 @@ interface.
 * `file` is the name of a file in your Git repository that you want to examine.
 
 This will bring up a browsing interface. Navigate around the file using the
-usual keys that should be familiar to anyone who uses Less (or Vim), and use
-<kbd>p</kbd> and <kbd>n</kbd> to move the previous or next revisions of the
+usual keys that should be familiar to anyone who uses Less, and use
+<kbd>[</kbd> and <kbd>]</kbd> to move the previous or next revisions of the
 file.
 
 Exit with <kbd>q</kbd>, or exit and pass the currently selected commit to
