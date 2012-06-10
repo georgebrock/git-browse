@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 
 import curses
-from curses import ascii
-from curses.textpad import Textbox
 import os
 import sys
 
-key_bindings = {}
+from gitbrowse.ui import ModalTextbox
 
-#TODO Refactor current code into a ModalTextbox class
+key_bindings = {}
 
 def bind_keys(*keys):
     def decorator(func):
@@ -280,21 +278,8 @@ class GitBrowser(object):
         self.file_history = GitFileHistory(path, commit)
         self.scroll_line = 0
         self.highlight_line = 0
-        self.mode = '__command__'
 
-    def _process_key(self, c):
-        if c >= ord('0') and c <= ord('9'):
-            return c
-            #TODO Use numbers as multipliers for some commands
-            #TODO Use numbers to jump to a line
-
-        if self.mode == '__search__':
-            return c
-        #TODO Move into a method somewhere
-        #TODO Constant for search
-        elif c == ord('/'):
-            self.mode = '__search__'
-
+    def textbox_command(self, textbox, c, prefix):
         if c == ord('q') or c == ord('Q'):
             self._teardown_curses()
             sys.exit(0)
@@ -305,13 +290,27 @@ class GitBrowser(object):
             sys.exit(0)
         elif c in key_bindings:
             getattr(self, key_bindings[c])()
-        elif not ascii.isprint(c):
-            return c
+            self._draw()
         else:
             curses.beep()
 
-        while len(self.command_input.gather()) > 0:
-            self.command_input.do_command(ascii.BS)
+    def textbox_mode_changed(self, textbox, mode):
+        self._draw()
+
+    def textbox_input(self, textbox, mode, data):
+        if mode == textbox.DEFAULT_MODE:
+            if not data:
+                self.down()
+            else:
+                line = int(data) - 1
+                max_highlight = len(self.file_history.blame()) - 1
+
+                if line < 0:
+                    line = 0
+                elif line > max_highlight:
+                    line = max_highlight
+
+                self.highlight_line = line
 
         self._draw()
 
@@ -325,14 +324,7 @@ class GitBrowser(object):
         self._draw()
 
         try:
-            while True:
-                command = self.command_input.edit(self._process_key)
-                self.command_win.erase()
-
-                if self.mode == '__search__':
-                    #TODO search for command
-                    self.mode = '__command__'
-                    self._draw()
+            self.command_input.edit(recurse=True)
         except:
             self._teardown_curses()
             raise
@@ -361,7 +353,8 @@ class GitBrowser(object):
         self.mode_win = self.screen.subwin(1, 2, curses.LINES-1, 0)
         self.command_win = self.screen.subwin(1, curses.COLS-1,
                                               curses.LINES-1, 1)
-        self.command_input = Textbox(self.command_win)
+
+        self.command_input = ModalTextbox(self.command_win, delegate=self)
 
     def _teardown_curses(self):
         curses.nocbreak()
@@ -407,11 +400,7 @@ class GitBrowser(object):
         self.status_win.addstr(0, 0, status)
         self.status_win.addstr(0, len(status), commit_msg)
 
-        if self.mode == '__search__':
-            mode_char = '/'
-        else:
-            mode_char = ':'
-        self.mode_win.addstr(0, 0, mode_char)
+        self.mode_win.addstr(0, 0, ':')
 
         self.commits_win.noutrefresh()
         self.code_win.noutrefresh()
@@ -420,7 +409,7 @@ class GitBrowser(object):
         self.command_win.noutrefresh()
         curses.doupdate()
 
-    @bind_keys('j', 'e', curses.KEY_ENTER, curses.KEY_DOWN)
+    @bind_keys('j', 'e', curses.KEY_DOWN)
     def down(self, lines=1):
         max_highlight = len(self.file_history.blame()) - 1
         if self.highlight_line >= max_highlight:
