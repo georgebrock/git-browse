@@ -403,9 +403,11 @@ class ModalTextbox(Textbox, object):
         textbox_command method calls sys.exit in some circumstances)
         """
         data = super(ModalTextbox, self).edit(validate=self._process_key)
+        data_mode = self.mode
+
         self.win.erase()
         self.mode = self.DEFAULT_MODE
-        self.delegate.textbox_input(self, self.mode, data)
+        self.delegate.textbox_input(self, data_mode, data)
 
         if recurse:
             self.edit(recurse)
