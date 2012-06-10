@@ -289,7 +289,8 @@ class GitBrowser(object):
             os.execvp('git', ('git', 'show', current_sha))
             sys.exit(0)
         elif c in key_bindings:
-            getattr(self, key_bindings[c])()
+            method = getattr(self, key_bindings[c])
+            method(prefix)
             self._draw()
         else:
             curses.beep()
@@ -423,12 +424,14 @@ class GitBrowser(object):
             self.scroll_line = min(self.scroll_line + lines, max_scroll_line)
 
     @bind_keys('d')
-    def half_page_down(self):
-        self.down((curses.LINES - 2) / 2)
+    def half_page_down(self, times=1):
+        half_page = (curses.LINES - 2) / 2
+        self.down(half_page * times)
 
     @bind_keys('f', ' ', 'z', curses.KEY_NPAGE)
-    def page_down(self):
-        self.down(curses.LINES - 2)
+    def page_down(self, times=1):
+        page = curses.LINES - 2
+        self.down(page * times)
 
     @bind_keys('k', 'y', curses.KEY_UP)
     def up(self, lines=1):
@@ -442,20 +445,22 @@ class GitBrowser(object):
             self.scroll_line = self.highlight_line
 
     @bind_keys('u')
-    def half_page_up(self):
-        self.up((curses.LINES - 2) / 2)
+    def half_page_up(self, times=1):
+        half_page = (curses.LINES - 2) / 2
+        self.up(half_page * times)
 
     @bind_keys('b', 'w', curses.KEY_PPAGE)
-    def page_up(self):
-        self.up(curses.LINES - 2)
+    def page_up(self, times=1):
+        page = curses.LINES - 2
+        self.up(page * times)
 
     @bind_keys('g', '<', curses.KEY_HOME)
-    def home(self):
+    def home(self, times=None):
         self.scroll_line = 0
         self.highlight_line = 0
 
     @bind_keys('G', '>', curses.KEY_END)
-    def end(self):
+    def end(self, times=None):
         self.scroll_line = self._max_scroll_line()
         self.highlight_line = len(self.file_history.blame()) - 1
 
@@ -475,12 +480,14 @@ class GitBrowser(object):
             self.highlight_line = new_highlight_line
 
     @bind_keys('n')
-    def next_commit(self):
-        self._move_commit('next')
+    def next_commit(self, times=1):
+        for i in range(0,times):
+            self._move_commit('next')
 
     @bind_keys('p')
-    def prev_commit(self):
-        self._move_commit('prev')
+    def prev_commit(self, times=1):
+        for i in range(0,times):
+            self._move_commit('prev')
 
     def _max_scroll_line(self):
         lines = self.file_history.blame()
