@@ -277,7 +277,30 @@ class GitBrowser(object):
     def __init__(self, path, commit):
         self.file_history = GitFileHistory(path, commit)
         self.scroll_line = 0
-        self.highlight_line = 0
+        self._highlight_line = 0
+
+    @property
+    def highlight_line(self):
+        return self._highlight_line
+
+    @highlight_line.setter
+    def highlight_line(self, value):
+        # Ensure highlighted line in sane
+        max_highlight = len(self.file_history.blame()) - 1
+        if value < 0:
+            value = 0
+        elif value > max_highlight:
+            value = max_highlight
+
+        delta = value - self._highlight_line
+        self._highlight_line = value
+
+        # Ensure highlighted line is visible
+        if value > self.scroll_line + curses.LINES - 3:
+            max_scroll_line = self._max_scroll_line()
+            self.scroll_line = min(self.scroll_line + delta, max_scroll_line)
+        elif self.highlight_line < self.scroll_line:
+            self.scroll_line = self.highlight_line
 
     def textbox_command(self, textbox, c, prefix):
         if c == ord('q') or c == ord('Q'):
@@ -304,13 +327,6 @@ class GitBrowser(object):
                 self.down()
             else:
                 line = int(data) - 1
-                max_highlight = len(self.file_history.blame()) - 1
-
-                if line < 0:
-                    line = 0
-                elif line > max_highlight:
-                    line = max_highlight
-
                 self.highlight_line = line
 
         self._draw()
@@ -417,11 +433,7 @@ class GitBrowser(object):
             curses.beep()
             return
 
-        self.highlight_line = min(self.highlight_line + lines, max_highlight)
-
-        if self.highlight_line > self.scroll_line + curses.LINES - 3:
-            max_scroll_line = self._max_scroll_line()
-            self.scroll_line = min(self.scroll_line + lines, max_scroll_line)
+        self.highlight_line += lines
 
     @bind_keys('d')
     def half_page_down(self, times=1):
@@ -439,10 +451,7 @@ class GitBrowser(object):
             curses.beep()
             return
 
-        self.highlight_line = max(self.highlight_line - lines, 0)
-
-        if self.highlight_line < self.scroll_line:
-            self.scroll_line = self.highlight_line
+        self.highlight_line -= lines
 
     @bind_keys('u')
     def half_page_up(self, times=1):
@@ -456,12 +465,10 @@ class GitBrowser(object):
 
     @bind_keys('g', '<', curses.KEY_HOME)
     def home(self, times=None):
-        self.scroll_line = 0
         self.highlight_line = 0
 
     @bind_keys('G', '>', curses.KEY_END)
     def end(self, times=None):
-        self.scroll_line = self._max_scroll_line()
         self.highlight_line = len(self.file_history.blame()) - 1
 
     def _move_commit(self, method_name):
