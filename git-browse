@@ -2,19 +2,8 @@
 
 import curses
 import os
-import sys
 
-from gitbrowse.ui import ModalTextbox
-
-key_bindings = {}
-
-def bind_keys(*keys):
-    def decorator(func):
-        for k in keys:
-            code = ord(k) if type(k) is str else k
-            key_bindings[code] = func.__name__
-        return func
-    return decorator
+from gitbrowse.ui import ModalTextbox, ModalScrollingInterface
 
 
 class GitCommit(object):
@@ -269,207 +258,50 @@ class GitFileHistory(object):
         return forward, backward
 
 
-class GitBrowser(object):
+class GitBrowser(ModalScrollingInterface):
     """
     Provides the user interface for the git browse tool.
     """
 
+    exit_keys = ModalScrollingInterface.exit_keys + (ord('s'), )
+
     def __init__(self, path, commit):
+        super(GitBrowser, self).__init__()
         self.file_history = GitFileHistory(path, commit)
-        self.scroll_line = 0
-        self._highlight_line = 0
 
-    @property
-    def highlight_line(self):
-        return self._highlight_line
+    def content(self):
+        return self.file_history.blame()
 
-    @highlight_line.setter
-    def highlight_line(self, value):
-        # Ensure highlighted line in sane
-        max_highlight = len(self.file_history.blame()) - 1
-        if value < 0:
-            value = 0
-        elif value > max_highlight:
-            value = max_highlight
+    def draw_content_line(self, line, row, window, highlight):
+        if highlight:
+            commit_color = self.INV_YELLOW
+            code_color = self.INV_GREEN if line.current else self.INV_WHITE
+        else:
+            commit_color = self.YELLOW
+            code_color = self.GREEN if line.current else 0
 
-        delta = value - self._highlight_line
-        self._highlight_line = value
+        window.addstr(row, 0, line.sha[:7], commit_color)
+        window.addstr(row, 7, '+ ' if line.current else '  ', code_color)
 
-        # Ensure highlighted line is visible
-        if value > self.scroll_line + curses.LINES - 3:
-            max_scroll_line = self._max_scroll_line()
-            self.scroll_line = min(self.scroll_line + delta, max_scroll_line)
-        elif self.highlight_line < self.scroll_line:
-            self.scroll_line = self.highlight_line
+        cols = curses.COLS - 9
+        padded_line = line.line[:cols].rstrip().ljust(cols, ' ')
+        window.addstr(row, 9, padded_line, code_color)
 
-    def textbox_command(self, textbox, c, prefix):
-        if c == ord('q') or c == ord('Q'):
-            self._teardown_curses()
-            sys.exit(0)
-        elif c == ord('s'):
-            self._teardown_curses()
+    def finalise(self, exit_key):
+        if exit_key == ord('s'):
             current_sha = self.file_history.current_commit.sha
             os.execvp('git', ('git', 'show', current_sha))
-            sys.exit(0)
-        elif c in key_bindings:
-            method = getattr(self, key_bindings[c])
-            method(prefix)
-            self._draw()
-        else:
-            curses.beep()
 
-    def textbox_mode_changed(self, textbox, mode):
-        self._draw()
+    def handle_input(self, mode, data):
+        pass
 
-    def textbox_input(self, textbox, mode, data):
-        if mode == textbox.DEFAULT_MODE:
-            if not data:
-                self.down()
-            else:
-                line = int(data) - 1
-                self.highlight_line = line
-
-        self._draw()
-
-    def run(self):
-        """
-        Starts the curses interface. This method won't return until
-        the user presses a key that terminates the session.
-        """
-
-        self._setup_curses()
-        self._draw()
-
-        try:
-            self.command_input.edit(recurse=True)
-        except:
-            self._teardown_curses()
-            raise
-
-    def _setup_curses(self):
-        self.screen = curses.initscr()
-        curses.noecho()
-        curses.cbreak()
-        self.screen.keypad(1)
-
-        curses.start_color()
-        curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
-        curses.init_pair(2, curses.COLOR_YELLOW, curses.COLOR_BLACK)
-        curses.init_pair(3, curses.COLOR_BLACK, curses.COLOR_WHITE)
-        curses.init_pair(4, curses.COLOR_BLACK, curses.COLOR_GREEN)
-        curses.init_pair(5, curses.COLOR_BLACK, curses.COLOR_YELLOW)
-        self.GREEN = curses.color_pair(1)
-        self.YELLOW = curses.color_pair(2)
-        self.INV_WHITE = curses.color_pair(3)
-        self.INV_GREEN = curses.color_pair(4)
-        self.INV_YELLOW = curses.color_pair(5)
-
-        self.commits_win = self.screen.subwin(curses.LINES-1, 9, 0, 0)
-        self.code_win = self.screen.subwin(curses.LINES-1, curses.COLS-9, 0, 9)
-        self.status_win = self.screen.subwin(1, curses.COLS, curses.LINES-2, 0)
-        self.mode_win = self.screen.subwin(1, 2, curses.LINES-1, 0)
-        self.command_win = self.screen.subwin(1, curses.COLS-1,
-                                              curses.LINES-1, 1)
-
-        self.command_input = ModalTextbox(self.command_win, delegate=self)
-
-    def _teardown_curses(self):
-        curses.nocbreak()
-        self.screen.keypad(0)
-        curses.echo()
-        curses.endwin()
-
-    def _draw(self):
-        lines = self.file_history.blame()
-
-        start = self.scroll_line
-        stop = self.scroll_line + curses.LINES - 2
-        visible_lines = lines[start:stop]
-
-        self.commits_win.clear()
-        self.code_win.clear()
-        for i, line in enumerate(visible_lines):
-            if i + start == self.highlight_line:
-                commit_color = self.INV_YELLOW
-                plus_color = self.INV_GREEN
-                code_color = plus_color if line.current else self.INV_WHITE
-            else:
-                commit_color = self.YELLOW
-                plus_color = self.GREEN
-                code_color = plus_color if line.current else 0
-
-            self.commits_win.addstr(i, 0, line.sha[:7], commit_color)
-            self.commits_win.addstr(i, 7, '  ', code_color)
-
-            cols = curses.COLS - 9
-            visible_line = line.line[0:cols].rstrip().ljust(cols, ' ')
-            self.code_win.addstr(i, 0, visible_line, code_color)
-            if line.current:
-                self.commits_win.addstr(i, 7, '+', plus_color)
-
-        self.status_win.clear()
-        status = '%s @ %s by %s: ' % (
+    def get_status(self):
+        return '%s @ %s by %s: %s' % (
             self.file_history.path,
             self.file_history.current_commit.sha[:7],
             self.file_history.current_commit.author,
+            self.file_history.current_commit.message,
         )
-        commit_msg = self.file_history.current_commit.message[:curses.COLS-1]
-        self.status_win.addstr(0, 0, status)
-        self.status_win.addstr(0, len(status), commit_msg)
-
-        self.mode_win.addstr(0, 0, ':')
-
-        self.commits_win.noutrefresh()
-        self.code_win.noutrefresh()
-        self.status_win.noutrefresh()
-        self.mode_win.noutrefresh()
-        self.command_win.noutrefresh()
-        curses.doupdate()
-
-    @bind_keys('j', 'e', curses.KEY_DOWN)
-    def down(self, lines=1):
-        max_highlight = len(self.file_history.blame()) - 1
-        if self.highlight_line >= max_highlight:
-            curses.beep()
-            return
-
-        self.highlight_line += lines
-
-    @bind_keys('d')
-    def half_page_down(self, times=1):
-        half_page = (curses.LINES - 2) / 2
-        self.down(half_page * times)
-
-    @bind_keys('f', ' ', 'z', curses.KEY_NPAGE)
-    def page_down(self, times=1):
-        page = curses.LINES - 2
-        self.down(page * times)
-
-    @bind_keys('k', 'y', curses.KEY_UP)
-    def up(self, lines=1):
-        if self.highlight_line <= 0:
-            curses.beep()
-            return
-
-        self.highlight_line -= lines
-
-    @bind_keys('u')
-    def half_page_up(self, times=1):
-        half_page = (curses.LINES - 2) / 2
-        self.up(half_page * times)
-
-    @bind_keys('b', 'w', curses.KEY_PPAGE)
-    def page_up(self, times=1):
-        page = curses.LINES - 2
-        self.up(page * times)
-
-    @bind_keys('g', '<', curses.KEY_HOME)
-    def home(self, times=None):
-        self.highlight_line = 0
-
-    @bind_keys('G', '>', curses.KEY_END)
-    def end(self, times=None):
-        self.highlight_line = len(self.file_history.blame()) - 1
 
     def _move_commit(self, method_name):
         start = self.file_history.current_commit.sha
@@ -485,20 +317,21 @@ class GitBrowser(object):
         new_highlight_line = mapping.get(self.highlight_line)
         if new_highlight_line is not None:
             self.highlight_line = new_highlight_line
+        else:
+            # The highlight_line setter validates the value, so it makes
+            # sense to set it to the same value here to make sure that it's
+            # not out of range for the newly loaded revision of the file.
+            self.highlight_line = self.highlight_line
 
-    @bind_keys('n')
+    @ModalScrollingInterface.key_bindings('n')
     def next_commit(self, times=1):
         for i in range(0,times):
             self._move_commit('next')
 
-    @bind_keys('p')
+    @ModalScrollingInterface.key_bindings('p')
     def prev_commit(self, times=1):
         for i in range(0,times):
             self._move_commit('prev')
-
-    def _max_scroll_line(self):
-        lines = self.file_history.blame()
-        return len(lines) - curses.LINES + 2
 
 
 if __name__ == '__main__':
