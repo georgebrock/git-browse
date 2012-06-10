@@ -13,7 +13,7 @@ interface.
 2. Link to the `git-browse` file so that it's somewhere on your path. For
    example, if `~/bin` was on your path you could do this:
 
-        ln -s git-browse/git-browse ~/bin/git-browse
+        ln -s /home/me/git-browse/git-browse ~/bin/git-browse
 
 ## Usage
 
