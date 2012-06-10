@@ -407,7 +407,7 @@ class ModalTextbox(Textbox, object):
 
         self.win.erase()
         self.mode = self.DEFAULT_MODE
-        self.delegate.textbox_input(self, data_mode, data)
+        self.delegate.textbox_input(self, data_mode, data.strip())
 
         if recurse:
             self.edit(recurse)
