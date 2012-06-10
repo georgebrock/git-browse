@@ -31,7 +31,7 @@ file.
 Exit with <kbd>q</kbd>, or exit and pass the currently selected commit to
 `git show` with <kbd>s</kbd>.
 
-Run `git browse --help` to see a full list of commands.
+Run `git browse -h` to see a full list of commands.
 
 ## Disclaimer
 
