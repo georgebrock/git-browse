@@ -1,4 +1,5 @@
 import curses
+import os
 
 from gitbrowse.ui import ModalTextbox, ModalScrollingInterface
 from gitbrowse.git import GitFileHistory
