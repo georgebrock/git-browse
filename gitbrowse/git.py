@@ -153,6 +153,17 @@ class GitFileHistory(object):
         forward = {}
         backward = {}
 
+        # Get information about blank lines: The git diff porcelain format
+        # (which we use for everything else) doesn't distinguish between
+        # additions and removals, so this is a very dirty hack to get around
+        # the problem.
+        p = os.popen('git diff %s %s -- %s | grep -E "^[+-]$"' % (
+            start,
+            finish,
+            self.path,
+        ))
+        blank_lines = [l.strip() for l in p.readlines()]
+
         p = os.popen('git diff --word-diff=porcelain %s %s -- %s' % (
             start,
             finish,
@@ -211,6 +222,7 @@ class GitFileHistory(object):
             line_iter = iter(content_lines)
             try:
                 while True:
+                    group_size = -1
                     line_delta = 0
                     line = ' '
                     while line != '~':
@@ -219,7 +231,17 @@ class GitFileHistory(object):
                         elif line.startswith('-'):
                             line_delta -= 1
 
+                        group_size += 1
                         line = line_iter.next().rstrip()
+
+                    if group_size == 0:
+                        # Two '~' lines next to each other means a blank
+                        # line has been either added or removed. Git
+                        # doesn't tell us which. This is all crazy.
+                        if blank_lines.pop(0) == '+':
+                            line_delta += 1
+                        else:
+                            line_delta -= 1
 
                     if line_delta == 1:
                         backward[finish_ln] = None
