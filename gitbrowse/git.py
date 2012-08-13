@@ -287,3 +287,13 @@ def verify_revision(rev):
         rev
     ))
     return status == 0
+
+
+def verify_file(path):
+    """
+    Verifies that a given file is tracked by Git and returns true or false
+    accordingly.
+    """
+    p = os.popen('git ls-files -- %s' % path)
+    matching_files = p.readlines()
+    return len(matching_files) > 0
