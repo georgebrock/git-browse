@@ -144,6 +144,9 @@ class ModalScrollingInterface(object):
 
         try:
             self.command_input.edit(recurse=True)
+        except KeyboardInterrupt:
+            self._teardown_curses()
+            return
         except:
             self._teardown_curses()
             raise
