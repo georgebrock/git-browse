@@ -4,6 +4,7 @@ import argparse
 import textwrap
 
 from gitbrowse.browser import GitBrowser
+from gitbrowse import git
 
 
 parser = argparse.ArgumentParser(
@@ -54,5 +55,6 @@ parser.add_argument('file',
                     help='the path to the file you want to examine')
 args = parser.parse_args()
 
-browser = GitBrowser(args.file, args.rev)
-browser.run()
+if git.verify_revision(args.rev):
+    browser = GitBrowser(args.file, args.rev)
+    browser.run()

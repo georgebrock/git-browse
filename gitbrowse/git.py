@@ -273,3 +273,17 @@ class GitFileHistory(object):
             finish_ln += 1
 
         return forward, backward
+
+
+def verify_revision(rev):
+    """
+    Verifies that a revision is valid in the current working directory,
+    and returns True or False accordingly.
+
+    Errors are not supressed, so if the revision is bad or the CWD isn't
+    a Git repository then Git's error message will be output.
+    """
+    status = os.system('git rev-parse --verify --no-revs %s' % (
+        rev
+    ))
+    return status == 0
