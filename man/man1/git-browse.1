@@ -1,0 +1,76 @@
+.\" Writing groff? `man 7 groff` and `info groff` are your friends.
+.TH "GIT\-BROWSE" "1" "2012-08-16" "git-browse 1.0" "Git Browse Manual"
+.\" ***** Formatting *****
+.nh \" disable hyphenation
+.ad l \" disable justifiction
+.\" ***** Content ****
+.SH "NAME"
+.sp
+.nf
+git-browse \- Interactively browse a file's Git history
+.SH "SYNOPSIS"
+\fIgit browse\fR [-h] [<commit>] <path>
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Browse the Git history of a single file. \fIgit-browse\fR is similar to \fBgit-blame\fR(1) but allows you to move between revisions interactively\&.
+.sp
+The commands for navigating around the file are based on \fBless\fR(1) and should therefore be familiar to most command line users. However, since only a subset of the \fBless\fR commands are currently supported and there are additional commands to move forwards and back through history it's worth glancing though the commands section below.
+.SH "OPTIONS"
+.PP
+\-h
+.RS 4
+Display a brief help message.
+.RE
+.PP
+<commit>
+.RS 4
+The commit to start from. Defaults to HEAD.
+.RE
+.PP
+<path>
+.RS 4
+The path to the file you want to examine. The file must be tracked by Git.
+.RE
+.SH "COMMANDS"
+.PP
+RETURN or DOWN or j or e
+.RS 4
+Move down one line.
+.RE
+.PP
+UP or k or y
+.RS 4
+Move up one line.
+.RE
+.PP
+PAGE-DOWN or SPACE or f or z
+.RS 4
+Move down by one screen.
+.RE
+.PP
+PAGE-UP or b or w
+.RS 4
+Move up by one screen.
+.RE
+.PP
+d
+.RS 4
+Move down half a screen.
+.RE
+.PP
+u
+.RS 4
+Move up half a screen.
+.RE
+.PP
+END or G or >
+.RS 4
+Move to the bottom of the file.
+.RE
+.PP
+HOME or G or <
+.RS 4
+move to the top of the file.
+.RE
