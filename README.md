@@ -10,10 +10,10 @@ interface.
 
         git clone git://github.com/georgebrock/git-browse.git
 
-2. Link to the `git-browse` file so that it's somewhere on your path. For
-   example, if `~/bin` was on your path you could do this:
+2. Add the `bin` directory to your `PATH`. For example, you might put the
+   following line in your `.bashrc` file:
 
-        ln -s /home/me/git-browse/git-browse ~/bin/git-browse
+        export PATH=$PATH:~/git-browse/bin
 
 ## Usage
 
