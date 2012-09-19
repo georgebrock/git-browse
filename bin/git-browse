@@ -7,7 +7,6 @@ import argparse
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from gitbrowse.browser import GitBrowser
-from gitbrowse import git
 
 
 parser = argparse.ArgumentParser(add_help=False)
@@ -15,13 +14,9 @@ parser.add_argument('rev', nargs='?', default='HEAD')
 parser.add_argument('file')
 args = parser.parse_args()
 
-if not git.verify_revision(args.rev):
-    sys.exit(1)
+try:
+    browser = GitBrowser(args.file, args.rev)
+except ValueError as err:
+    sys.exit(str(err))
 
-if not git.verify_file(args.file):
-    sys.exit("'%s' either does not exist, or is not tracked by git" % (
-        args.file
-    ))
-
-browser = GitBrowser(args.file, args.rev)
 browser.run()

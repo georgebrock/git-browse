@@ -35,8 +35,13 @@ class GitFileHistory(object):
     """
 
     def __init__(self, path, start_commit):
-        #TODO Validate path
-        #TODO Validate commit
+        if not verify_revision(start_commit):
+            raise ValueError('%s is not a valid commit, branch, tag, etc.' % (
+                start_commit,
+            ))
+
+        if not verify_file(path):
+            raise ValueError('"%s" is not tracked by git' % (path, ))
 
         self.path = path
 
