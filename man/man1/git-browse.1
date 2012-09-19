@@ -34,6 +34,10 @@ The commit to start from. Defaults to HEAD.
 The path to the file you want to examine. The file must be tracked by Git.
 .RE
 .SH "COMMANDS"
+.SS "Navigating around the file"
+.PP
+Most navigation commands can be prefixed with the number of times they should
+be executed, for example "3j" moves down by three lines.
 .PP
 RETURN or DOWN or j or e
 .RS 4
@@ -72,5 +76,70 @@ Move to the bottom of the file.
 .PP
 HOME or G or <
 .RS 4
-move to the top of the file.
+Move to the top of the file.
+.RE
+.PP
+<n> RETURN
+.RS 4
+Jumps to line <n>, for example pressing "4" and then "RETURN" jumps to line
+4 of the file.
+.RE
+
+.SS "Navigating Git history"
+.PP
+Git navigation commands can be prefixed with the number of times they should
+be executed, for example "3]" moves forward by three commits.
+.PP
+When moving through history the selected line will be preserved, even if
+lines are added or removed before it.
+.PP
+[
+.RS 4
+Move to the previous commit that changed the selected file.
+.RE
+.PP
+]
+.RS 4
+Move to the next commit that changed the selected file.
+.RE
+
+.SS "Searching"
+.PP
+/string
+.RS 4
+Search forwards through the file for the next line containing the string. All
+matches will be highlighted, and the selection will jump to the next line
+containing a match.
+.RE
+.PP
+?string
+.RS 4
+Search backwards through the file for the next line containing the string. All
+matches will be highlighted, and the selection will jump to the next line
+containing a match.
+.RE
+.PP
+n
+.RS 4
+Jump to the next match for the latest search. The direction of the search is
+respected; if you searched using / the next match means moving down the file,
+but if you searched using ? the next match means moving up the file.
+.RE
+.PP
+N
+.RS 4
+Jump to the previous match for the latest search. As with the "n" command,
+the direction of the search is respected.
+.RE
+
+.SS "Quitting"
+.PP
+q or Q
+.RS 4
+Quit.
+.RE
+.PP
+s
+.RS 4
+Quit, and run \fBgit-show\fR(1) for the currently selected commit.
 .RE
