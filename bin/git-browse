@@ -11,52 +11,9 @@ from gitbrowse.browser import GitBrowser
 from gitbrowse import git
 
 
-parser = argparse.ArgumentParser(
-    description=textwrap.dedent('''\
-            Browse the Git history of a single file. Similar to
-            git blame, but interactive.
-        '''),
-    formatter_class=argparse.RawDescriptionHelpFormatter,
-    epilog=textwrap.dedent('''\
-           You can use the following key commands to move around the
-           interactive blame output. If you use less they should be
-           somewhat familiar:
-
-           NAVIGATING AROUND THE FILE:
-            j e RETURN DOWN         move down one line
-            k y UP                  move up one line
-            f z SPACE PAGE-DOWN     move down one screen
-            b w PAGE-UP             move up one screen
-            d                       move down half a screen
-            u                       move up half a screen
-            G > END                 move to the bottom of the file
-            g < HOME                move to the top of the file
-
-           NAVIGATING GIT HISTORY:
-            [                       move to the previous commit
-            ]                       move to the next commit
-
-           SEARCH:
-            /                       search forwards through file
-            ?                       search backwards through file
-            n                       go to next match
-            N                       go to previous match
-
-           QUITTING:
-            q Q                     quit
-            s                       quit, and run `git show`
-
-           NOTES:
-           - Most of the commands above can be prefixed with a
-             number, e.g. 3j will move down three lines.
-           - Entering a number and hitting return will jump to
-             that line, e.g. 10<RETURN> will jump to line 10.
-        '''),
-    )
-parser.add_argument('rev', nargs='?', default='HEAD',
-                    help='a Git revision to start from (defaults to HEAD)')
-parser.add_argument('file',
-                    help='the path to the file you want to examine')
+parser = argparse.ArgumentParser(add_help=False)
+parser.add_argument('rev', nargs='?', default='HEAD')
+parser.add_argument('file')
 args = parser.parse_args()
 
 if not git.verify_revision(args.rev):
