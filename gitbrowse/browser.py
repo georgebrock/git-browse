@@ -66,12 +66,12 @@ class GitBrowser(ModalScrollingInterface):
             self._draw()
 
     def get_status(self):
-        return '%s @ %s by %s: %s' % (
-            self.file_history.path,
-            self.file_history.current_commit.sha[:7],
-            self.file_history.current_commit.author,
-            self.file_history.current_commit.message,
-        )
+        return '%(path)s @ %(sha)s by %(author)s: %(message)s' % {
+            'path': self.file_history.path,
+            'sha': self.file_history.current_commit.sha[:7],
+            'author': self.file_history.current_commit.author,
+            'message': self.file_history.current_commit.message,
+        }
 
     def _move_commit(self, method_name):
         start = self.file_history.current_commit.sha
