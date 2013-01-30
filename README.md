@@ -42,7 +42,7 @@ Run `git browse --help` or `man git-browse` to see the full documentation.
   the next and previous matches).
 * Jump to a line by typing the line number and pressing <kbd>return</kbd>.
 
-## Disclaimer
+## License
 
-This isn't extensively tested and probably contains all kinds of bugs. This
-software is provided without warranty, and all that.
+`git browse` is licensed under the MIT license. See the LICENSE file for
+details.
